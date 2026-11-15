@@ -1,0 +1,135 @@
+[project]
+name = "freewisper"
+version = "0.1.0"
+description = "Freewisper — cross-platform push-to-talk voice dictation with local STT and pluggable LLM cleanup."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Freewisper contributors" }]
+keywords = ["dictation", "speech-to-text", "whisper", "hotkey", "accessibility", "push-to-talk"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: X11 Applications",
+    "Environment :: MacOS X",
+    "Environment :: Win32 (MS Windows)",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Capture/Recording",
+    "Topic :: Text Processing :: Linguistic",
+]
+
+# Runtime dependencies for the foundation layer. Everything OS- or
+# hardware-specific lives behind an optional extra so that `freewisper doctor`
+# and the config tooling work on a bare machine.
+dependencies = [
+    "pydantic>=2.6",
+    "platformdirs>=4.0",
+]
+
+[project.optional-dependencies]
+audio = ["sounddevice>=0.4.6", "numpy>=1.24", "scipy>=1.11"]
+hotkey = ["pynput>=1.7.6"]
+tray = ["pystray>=0.19.5", "pillow>=10.0"]
+secrets = ["keyring>=24.0"]
+macos = [
+    "pyobjc-framework-Cocoa>=10.0; sys_platform == 'darwin'",
+    "pyobjc-framework-Quartz>=10.0; sys_platform == 'darwin'",
+    "pyobjc-framework-ApplicationServices>=10.0; sys_platform == 'darwin'",
+]
+windows = ["pywin32>=306; sys_platform == 'win32'"]
+# evdev 2.x added a C extension, which would force a compiler onto every
+# Linux user. 1.x is pure-Python (ctypes) and installs anywhere.
+wayland = ["evdev>=1.6.0,<2.0; sys_platform == 'linux'"]
+dev = [
+    "numpy>=1.24",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[project.scripts]
+freewisper = "freewisper.cli:main"
+
+# NOTE: replace YOUR-USERNAME with your GitHub handle before publishing.
+[project.urls]
+Homepage = "https://github.com/YOUR-USERNAME/freewisper"
+Repository = "https://github.com/YOUR-USERNAME/freewisper"
+Issues = "https://github.com/YOUR-USERNAME/freewisper/issues"
+Changelog = "https://github.com/YOUR-USERNAME/freewisper/blob/main/CHANGELOG.md"
+"Issue tracker" = "https://github.com/YOUR-USERNAME/freewisper/issues"
+
+# NOTE: the plugin entry-point groups ("freewisper.stt", "freewisper.llm")
+# are deliberately NOT declared yet. The provider modules they would point at
+# land in Phase 4/5, and the loader in Phase 12. Declaring them now would
+# register entry points that raise ModuleNotFoundError on load, which is
+# worse than having none. See docs/PROVIDERS.md.
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+freewisper = ["resources/**/*"]
+
+# --------------------------------------------------------------------------
+# pytest
+# --------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+filterwarnings = ["error"]
+
+# --------------------------------------------------------------------------
+# ruff
+# --------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "BLE"]
+ignore = [
+    "E501",   # line length is the formatter's job
+    "RUF012", # ClassVar annotations are noisy for pydantic models
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+
+# --------------------------------------------------------------------------
+# mypy
+# --------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unreachable = true
+show_error_codes = true
+files = ["src/freewisper"]
+exclude = ["^src/freewisper/resources/"]
+
+[[tool.mypy.overrides]]
+module = ["sounddevice.*", "pynput.*", "pystray.*", "keyring.*", "evdev.*"]
+ignore_missing_imports = true
+
+# --------------------------------------------------------------------------
+# coverage
+# --------------------------------------------------------------------------
+[tool.coverage.run]
+branch = true
+source = ["src/freewisper"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

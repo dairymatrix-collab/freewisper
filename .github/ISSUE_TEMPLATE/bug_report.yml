@@ -1,0 +1,93 @@
+name: Bug report
+description: Something in Freewisper does not work the way it should
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this.
+
+        **Please report the symptom, not your theory about the cause.**
+        "The paste goes to the wrong window" is far more useful than
+        "I think the clipboard race is broken".
+
+  - type: textarea
+    id: symptom
+    attributes:
+      label: What happens?
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: |
+        I hold Right Alt, speak, release. Instead of the text appearing at
+        the cursor, nothing is pasted and the HUD disappears.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: |
+        From the log file, with any secrets removed.
+
+        - Linux: `~/.local/state/freewisper/freewisper.log`
+        - macOS: `~/Library/Logs/freewisper/freewisper.log`
+        - Windows: `%LOCALAPPDATA%\freewisper\Logs\freewisper.log`
+      render: shell
+
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `freewisper doctor --json`
+      description: Copy and paste the whole thing.
+      render: json
+
+  - type: input
+    id: version
+    attributes:
+      label: Freewisper version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Windows
+        - Linux (X11)
+        - Linux (Wayland)
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Which part of the app is involved?
+      options:
+        - Configuration / settings
+        - Audio capture
+        - Transcription
+        - Cleanup / formatting
+        - Text injection
+        - HUD overlay
+        - System tray
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Device names, unusual setup, or a reproduction recipe.
