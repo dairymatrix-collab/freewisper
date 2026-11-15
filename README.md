@@ -9,10 +9,11 @@ Cross-platform **push-to-talk voice dictation**. Hold a key, speak, release — 
 
 Local speech-to-text with pluggable LLM cleanup, a floating HUD that never steals keyboard focus, and text inserted wherever your caret is.
 
-> **Status: Phase 2 of 12 — core complete.**
+> **Status: Phase 3 of 12 — the audio engine is done.**
 > The configuration layer, logging, CLI and diagnostics are built and tested (Phase 1).
 > The event bus, state machine, cancellable task runner and dictation pipeline are built
-> and tested (Phase 2). The audio engine lands in Phase 3+.
+> and tested (Phase 2). The always-on recorder, the pre-roll ring buffer, the energy VAD
+> and hot-plug device recovery are built and tested (Phase 3).
 > See [`docs/BUILD-SPEC.md`](docs/BUILD-SPEC.md) for the full plan.
 
 ---
@@ -183,6 +184,7 @@ uv run freewisper doctor            # diagnose your machine
 | `ruff` | zero findings |
 | Phase 1 acceptance | 11/11 — `python scripts/verify_phase1.py` |
 | Phase 2 acceptance | 9/9 — `python scripts/verify_phase2.py` |
+| Phase 3 acceptance | 13/13 — `python scripts/verify_phase3.py` |
 
 ## Licence
 

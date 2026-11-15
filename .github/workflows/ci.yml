@@ -66,6 +66,9 @@ jobs:
       - name: Acceptance criteria — Phase 2
         run: uv run python scripts/verify_phase2.py
 
+      - name: Acceptance criteria — Phase 3
+        run: uv run python scripts/verify_phase3.py
+
   python-versions:
     name: py${{ matrix.python }}
     runs-on: ubuntu-latest

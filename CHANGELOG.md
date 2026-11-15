@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Phase 3: the audio engine
+
+- **Always-on recorder.** The microphone is opened once and stays open for the
+  whole session. Pressing the hotkey no longer opens a device, which is what
+  makes the pre-roll possible.
+- **Pre-roll ring buffer.** The half second of audio captured *before* the
+  hotkey went down is kept in a fixed-size ring buffer and prepended to the
+  recording. Memory is allocated once and never grows.
+- **Energy VAD.** Pure functions over an array: a -42 dBFS threshold, a 600 ms
+  hangover that bridges the pause between words, and a 200 ms minimum that
+  rejects key taps. Used to measure speech duration and to trim silence
+  before transcription.
+- **Hot-plug recovery.** A background thread watches the active microphone
+  every two seconds. When it disappears, Freewisper switches to another one,
+  keeps the words already captured, and publishes `DEVICE_CHANGED`.
+- **`freewisper devices`** now reports the microphones, the system default
+  and the one the configuration would actually use.
+- **`freewisper doctor`** gained a *microphones* check.
+
+### Changed
+
+- `RECORDING_STOPPED` now carries `dropped`, so a subscriber can tell a
+  kept utterance from a discarded one without waiting for
+  `UTTERANCE_DROPPED`.
+- `RecordingResult` gained `speech_s` — how much of the capture was speech.
+- numpy is now a base dependency: the ring buffer, the VAD and the level
+  meter are pure array maths and must import without any audio hardware.
+
+## [Unreleased]
+
 Nothing yet.
 
 ## [0.1.0] — 2026-11-15

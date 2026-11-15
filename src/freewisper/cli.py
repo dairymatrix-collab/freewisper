@@ -35,6 +35,7 @@ from .config.paths import (
     models_dir,
 )
 from .config.store import load_config
+from .core.errors import AudioError
 from .logging_setup import setup_logging
 
 log = logging.getLogger("freewisper.cli")
@@ -187,45 +188,58 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 def cmd_devices(args: argparse.Namespace) -> int:
     """List audio input devices."""
+    from freewisper.audio.backend import SoundDeviceBackend
+    from freewisper.audio.devices import DeviceManager
+
+    backend = SoundDeviceBackend()
+    manager = DeviceManager(backend)
+
     try:
-        import sounddevice as sd
-    except Exception as exc:  # noqa: BLE001 - optional dependency
+        devices = manager.list_inputs()
+    except AudioError as exc:
+        # The backend could not be loaded at all — that is a missing
+        # dependency, not a problem with the devices.
         print(
-            "sounddevice is not available in this environment.\n"
+            "The audio backend (sounddevice) is not available in this environment.\n"
             "Install the audio extra:  pip install 'freewisper[audio]'\n"
-            f"({type(exc).__name__}: {exc})",
+            f"({exc})",
             file=sys.stderr,
         )
         return 2
-
-    try:
-        devices = sd.query_devices()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001 - the message is the point
         print(f"Could not query audio devices: {exc}", file=sys.stderr)
         return 1
 
     print("Input devices")
     print("-" * 72)
-    found = 0
-    for index, device in enumerate(devices):
-        if device.get("max_input_channels", 0) <= 0:
-            continue
-        found += 1
-        rate = int(device.get("default_samplerate", 0))
-        channels = int(device.get("max_input_channels", 0))
-        print(f"  #{index:<3} {device.get('name', '?'):<44} {rate:>6} Hz  {channels} ch")
+    for device in devices:
+        print(
+            f"  #{device.index:<3} {device.name:<44} "
+            f"{int(device.default_sample_rate):>6} Hz  {device.max_input_channels} ch"
+        )
 
-    if found == 0:
+    if not devices:
         print("  (no input devices found)")
         print()
         return 1
 
     print()
     try:
-        default = sd.query_devices(kind="input")
-        print(f"Default input: #{default.get('index')} — {default.get('name')}")
+        default = manager.default_input()
+        print(f"Default input: #{default.index} — {default.name}")
     except Exception:  # noqa: BLE001 - informational only
         pass
+
+    # Show which device the configuration would actually use.
+    try:
+        cfg = load_config()
+        selected = manager.resolve(
+            index=cfg.audio.device if isinstance(cfg.audio.device, int) else None,
+            name_substring=cfg.audio.device if isinstance(cfg.audio.device, str) else None,
+        )
+        print(f"Configured input: #{selected.index} — {selected.name}")
+    except Exception as exc:  # noqa: BLE001 - informational only
+        print(f"Configured input: could not be resolved ({exc})")
     return 0
 
 
@@ -328,6 +342,42 @@ def _check_import(label: str, module: str, extra: str) -> Check:
     return Check(label, _STATUS_PASS, f"{module} importable")
 
 
+def _check_audio_devices() -> Check:
+    """Report the microphones and the one the configuration would use."""
+    from freewisper.audio.backend import SoundDeviceBackend
+    from freewisper.audio.devices import DeviceManager
+
+    manager = DeviceManager(SoundDeviceBackend())
+
+    try:
+        devices = manager.list_inputs()
+    except Exception as exc:  # noqa: BLE001 - the message is the point
+        return Check(
+            "microphones",
+            _STATUS_WARN,
+            f"could not enumerate input devices ({type(exc).__name__}: {exc})",
+        )
+
+    if not devices:
+        return Check(
+            "microphones",
+            _STATUS_WARN,
+            "no input devices found — dictation will not work",
+        )
+
+    try:
+        cfg = load_config()
+        selected = manager.resolve(
+            index=cfg.audio.device if isinstance(cfg.audio.device, int) else None,
+            name_substring=cfg.audio.device if isinstance(cfg.audio.device, str) else None,
+        )
+        detail = f"{len(devices)} found; using #{selected.index} — {selected.name}"
+    except Exception as exc:  # noqa: BLE001 - informational only
+        detail = f"{len(devices)} found; the configured one could not be resolved ({exc})"
+
+    return Check("microphones", _STATUS_PASS, detail)
+
+
 def _check_stt() -> Check:
     try:
         import faster_whisper  # type: ignore[import-not-found]  # noqa: F401
@@ -426,6 +476,7 @@ def collect_checks() -> list[Check]:
         _check_writable("log dir", log_dir()),
         _check_api_key(),
         _check_import("audio backend", "sounddevice", "audio"),
+        _check_audio_devices(),
         _check_stt(),
         _check_hotkey(),
         _check_hud(),

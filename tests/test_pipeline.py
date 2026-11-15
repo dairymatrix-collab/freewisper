@@ -267,6 +267,39 @@ def test_a_short_utterance_is_dropped() -> None:
     assert h.events.count(Event.INJECTED) == 0
 
 
+def test_the_stop_event_says_that_the_utterance_was_dropped() -> None:
+    """``RECORDING_STOPPED`` carries ``dropped=True`` for a short utterance."""
+    h = Harness(recorder=FakeRecorder(duration_s=0.1), min_utterance_ms=300)
+
+    h.dictate()
+    stopped = h.events.wait(Event.RECORDING_STOPPED)
+
+    assert stopped["dropped"] is True
+    assert stopped["duration_ms"] < 300
+
+
+def test_the_stop_event_says_that_the_utterance_was_kept() -> None:
+    h = Harness(recorder=FakeRecorder(duration_s=1.0), min_utterance_ms=300)
+
+    h.dictate()
+    stopped = h.events.wait(Event.RECORDING_STOPPED)
+
+    assert stopped["dropped"] is False
+
+
+def test_a_short_utterance_never_reaches_the_transcriber_or_the_injector() -> None:
+    """The Phase-3 rule: too short means no STT call and no injection."""
+    h = Harness(recorder=FakeRecorder(duration_s=0.29), min_utterance_ms=300)
+
+    h.dictate()
+    h.events.wait(Event.UTTERANCE_DROPPED)
+
+    assert h.transcriber.calls == 0
+    assert h.injector.injected == []
+    assert h.events.count(Event.INJECTED) == 0
+    assert h.events.count(Event.TRANSCRIPT_READY) == 0
+
+
 def test_a_utterance_exactly_at_the_minimum_is_kept() -> None:
     h = Harness(recorder=FakeRecorder(duration_s=0.3), min_utterance_ms=300)
 

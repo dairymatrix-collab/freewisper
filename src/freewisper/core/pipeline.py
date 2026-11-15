@@ -156,14 +156,16 @@ class Pipeline:
 
         duration_ms = result.duration_s * 1000 if result is not None else 0.0
         session.audio = result.audio if result is not None else None
+        dropped = result is None or duration_ms < self._min_utterance_ms
         self._bus.publish(
             Event.RECORDING_STOPPED,
             session=session,
             generation=generation,
             duration_ms=duration_ms,
+            dropped=dropped,
         )
 
-        if result is None or duration_ms < self._min_utterance_ms:
+        if dropped:
             session.dropped = True
             self._logger.info(
                 "Dropping a %.0f ms utterance (minimum is %d ms).",

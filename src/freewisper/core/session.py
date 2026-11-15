@@ -22,6 +22,9 @@ class RecordingResult:
     duration_s: float
     sample_rate: int = 16_000
     channels: int = 1
+    #: How much of the capture was actually speech, as measured by the VAD.
+    #: Zero when voice-activity detection is switched off.
+    speech_s: float = 0.0
 
 
 @dataclass

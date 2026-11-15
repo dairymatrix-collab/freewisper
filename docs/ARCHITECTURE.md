@@ -11,9 +11,15 @@ never the other way round.
 ├────────────────────────────────────────────────────────────┤
 │ providers/   stt/ llm/ inject/                             │  swappable backends
 ├────────────────────────────────────────────────────────────┤
+│ audio/       recorder, ring buffer, VAD, devices           │  the sound card
+├────────────────────────────────────────────────────────────┤
 │ core/        events, states, tasks, pipeline               │  pure logic, zero I/O
 └────────────────────────────────────────────────────────────┘
 ```
+
+`audio/` sits directly above `core/`: it may use the shared errors and
+events, but it must not reach up into `providers/`, `platform/` or `ui/`.
+`tests/test_layering.py` enforces that too.
 
 ## Why this shape
 
@@ -41,9 +47,25 @@ This layout makes three things true instead of aspirational:
 |---|---|
 | `core/` | **Built.** Event bus, state machine, task runner, pipeline, session, errors. |
 | `config/` | **Built.** Typed schema, atomic store, migration, quarantine. |
+| `audio/` | **Built.** Always-on recorder, pre-roll ring buffer, energy VAD, level meter, hot-plug device recovery. |
 | `providers/` | Not started — Phase 4 and 5. |
 | `platform/` | Not started — Phase 7 and 8. |
 | `ui/` | Not started — Phase 8 and 11. |
+
+## The audio layer
+
+The audio layer is split in two halves. The first half is pure array maths
+and imports nothing but numpy; the second half knows that sound cards exist.
+
+| Module | What it does |
+|---|---|
+| `audio/ring.py` | `RingAudioBuffer` — a fixed-size ring of mono float32 samples. Memory is allocated once and never grows, however much audio is pushed through it. |
+| `audio/vad.py` | Energy VAD as pure functions: `find_speech`, `has_speech`, `speech_duration`, `trim_silence`. |
+| `audio/levels.py` | `LevelMeter` — a bounded, thread-safe history of RMS levels for the HUD. |
+| `audio/resample.py` | Mono downmix and polyphase resampling to 16 kHz, the shape every Whisper-family model expects. |
+| `audio/backend.py` | The `AudioBackend` protocol and its PortAudio implementation. The protocol is what makes the recorder testable without hardware. |
+| `audio/devices.py` | `DeviceManager` — enumeration, selection by index or name, and the hot-plug watcher. |
+| `audio/recorder.py` | The always-on recorder itself. |
 
 ## The core layer
 
@@ -149,6 +171,27 @@ be swapped without touching the pipeline.
 `qwen/qwen3.8-27b` is a Preview model ("may be discontinued at short
 notice"), roughly 2.2× slower, and about 13× more expensive per output
 token than `openai/gpt-oss-20b`. The default is the Production model.
+
+**The microphone is opened once, not once per press.** The always-on
+stream is the whole point of the pre-roll: the half second of audio captured
+*before* the hotkey went down is still in the ring buffer when it does. A
+press-to-open design cannot recover that audio, and on a Bluetooth headset
+it also loses the first word while the device wakes up.
+
+**The ring buffer is a fixed allocation.** A growing list would be simpler to
+write and wrong in production: a dictation session that ran for hours would
+slowly consume memory. The buffer is sized once from the configuration and
+pushes overwrite the oldest samples.
+
+**A device switch keeps what was already said.** When a headset is unplugged
+mid-sentence the captured audio is kept as its own segment, because it was
+recorded at the old device's sample rate. Each segment is resampled on its
+own before they are joined, so no words are lost to a cable being pulled.
+
+**The microphone is never written to disk.** The recorder hands the buffer
+to the caller and forgets about it. There is no temporary file, no cache
+file, no debug dump — the acceptance script checks that a one-second capture
+creates zero files.
 
 **The HUD never takes keyboard focus.** If it does, the caret stops blinking
 and the paste fails silently — the worst possible failure mode. Each

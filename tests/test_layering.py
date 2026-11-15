@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 CORE_DIR = Path(__file__).resolve().parent.parent / "src" / "freewisper" / "core"
+AUDIO_DIR = Path(__file__).resolve().parent.parent / "src" / "freewisper" / "audio"
 
 #: Top-level modules that would break the "core is pure" guarantee.
 FORBIDDEN_ROOTS = frozenset(
@@ -53,6 +54,28 @@ FORBIDDEN_ROOTS = frozenset(
         "freewisper.ui",
         "freewisper.platform",
         "freewisper.cli",
+        "freewisper.audio",
+    }
+)
+
+#: Packages the audio layer is allowed to import. The audio layer sits
+#: directly above ``core``: it may use the shared errors and events, but it
+#: must not reach up into the UI, the providers or the platform layer.
+AUDIO_ALLOWED_PACKAGES = frozenset(
+    {
+        "freewisper.core",
+        "freewisper.config",
+        "freewisper.audio",
+    }
+)
+
+#: Packages the audio layer must never import.
+AUDIO_FORBIDDEN_PACKAGES = frozenset(
+    {
+        "freewisper.ui",
+        "freewisper.providers",
+        "freewisper.platform",
+        "freewisper.cli",
     }
 )
 
@@ -77,8 +100,53 @@ def imported_roots(tree: ast.AST) -> set[str]:
     return roots
 
 
+def audio_modules() -> list[Path]:
+    """Every Python file in the audio package."""
+    return sorted(AUDIO_DIR.rglob("*.py"))
+
+
+def imported_packages(tree: ast.AST) -> set[str]:
+    """The ``freewisper.*`` packages imported anywhere in a file."""
+    packages: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.startswith("freewisper"):
+                    packages.add(".".join(alias.name.split(".")[:2]))
+        elif isinstance(node, ast.ImportFrom):
+            if node.level or not node.module:
+                continue
+            if node.module.startswith("freewisper"):
+                packages.add(".".join(node.module.split(".")[:2]))
+    return packages
+
+
 def test_core_is_not_empty() -> None:
     assert len(core_modules()) >= 6
+
+
+def test_audio_is_not_empty() -> None:
+    assert len(audio_modules()) >= 6
+
+
+@pytest.mark.parametrize("path", audio_modules(), ids=lambda p: p.name)
+def test_audio_imports_only_allowed_packages(path: Path) -> None:
+    """The audio layer must not reach up into the UI or the providers."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    offending = imported_packages(tree) & AUDIO_FORBIDDEN_PACKAGES
+    assert not offending, f"{path.name} imports forbidden package(s): {sorted(offending)}"
+
+    unknown = imported_packages(tree) - AUDIO_ALLOWED_PACKAGES
+    assert not unknown, f"{path.name} imports package(s) outside the allowed set: {sorted(unknown)}"
+
+
+@pytest.mark.parametrize("path", audio_modules(), ids=lambda p: p.name)
+def test_audio_never_prints(path: Path) -> None:
+    """Audio code reports through the logger, never through stdout."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            assert node.func.id != "print", f"{path.name} calls print() at line {node.lineno}"
 
 
 @pytest.mark.parametrize("path", core_modules(), ids=lambda p: p.name)

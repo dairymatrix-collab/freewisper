@@ -14,7 +14,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 #: Bump when the on-disk shape changes in a way that needs a migration.
 SCHEMA_VERSION = 2
@@ -117,6 +117,12 @@ class AudioConfig(_Model):
 
     device: int | str | None = None
     channels: int | str = "auto"
+    #: Remove leading and trailing silence before the audio reaches the
+    #: speech-to-text model.
+    trim_silence: bool = True
+    #: How much audio the always-on ring buffer holds. Must be at least as
+    #: long as ``general.pre_roll_ms``.
+    ring_seconds: float = 1.5
     vad: VadConfig = Field(default_factory=VadConfig)
 
 
@@ -263,6 +269,23 @@ class FreewisperConfig(_Model):
     context: ContextConfig = Field(default_factory=ContextConfig)
     history: HistoryConfig = Field(default_factory=HistoryConfig)
     privacy: PrivacyConfig = Field(default_factory=PrivacyConfig)
+
+    @model_validator(mode="after")
+    def _check_pre_roll_fits_the_ring(self) -> FreewisperConfig:
+        """The ring buffer has to be able to hold the whole pre-roll.
+
+        Silently shrinking the pre-roll would lose the audio the user
+        deliberately configured to keep, so this is a hard error rather than
+        a silent adjustment.
+        """
+        ring_ms = self.audio.ring_seconds * 1000.0
+        if self.general.pre_roll_ms > ring_ms:
+            raise ValueError(
+                f"general.pre_roll_ms ({self.general.pre_roll_ms}) is longer than "
+                f"audio.ring_seconds ({self.audio.ring_seconds:g} s = {ring_ms:g} ms). "
+                "Increase audio.ring_seconds or reduce general.pre_roll_ms."
+            )
+        return self
 
     def describe(self) -> dict[str, Any]:
         """Compact summary used by ``freewisper run --dry-run`` and ``freewisper doctor``."""

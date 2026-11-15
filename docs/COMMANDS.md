@@ -101,3 +101,22 @@ cloud indicator so you know it happened.
 | macOS | `AXUIElement` value of the focused text field (Accessibility permission) |
 | Windows | `GetGUIThreadInfo` → `WM_GETTEXT`, with UI Automation as a fallback |
 | Linux | X11 / AT-SPI where available; often unavailable, and degrades gracefully |
+
+## `freewisper devices`
+
+Lists the microphones, the system default and the device the configuration
+would actually use.
+
+```
+$ freewisper devices
+Input devices
+------------------------------------------------------------------------
+  #0   Built-in Microphone                                44100 Hz  2 ch
+  #3   USB Headset Mic                                    48000 Hz  1 ch
+
+Default input: #0 — Built-in Microphone
+Configured input: #3 — USB Headset Mic
+```
+
+Exit codes: `0` success, `1` no input devices found, `2` the audio backend
+could not be loaded (install the `audio` extra).

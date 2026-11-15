@@ -560,6 +560,9 @@ name = "freewisper"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
+    { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "platformdirs", version = "4.12.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "platformdirs", version = "4.14.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pydantic" },
@@ -577,12 +580,13 @@ audio = [
 ]
 dev = [
     { name = "mypy" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
-    { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
+    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "sounddevice" },
 ]
 hotkey = [
     { name = "pynput" },
@@ -615,8 +619,8 @@ requires-dist = [
     { name = "evdev", marker = "sys_platform == 'linux' and extra == 'wayland'", specifier = ">=1.6.0,<2.0" },
     { name = "keyring", marker = "extra == 'secrets'", specifier = ">=24.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.11" },
+    { name = "numpy", specifier = ">=1.24" },
     { name = "numpy", marker = "extra == 'audio'", specifier = ">=1.24" },
-    { name = "numpy", marker = "extra == 'dev'", specifier = ">=1.24" },
     { name = "pillow", marker = "extra == 'tray'", specifier = ">=10.0" },
     { name = "platformdirs", specifier = ">=4.0" },
     { name = "pydantic", specifier = ">=2.6" },
@@ -630,7 +634,9 @@ requires-dist = [
     { name = "pywin32", marker = "sys_platform == 'win32' and extra == 'windows'", specifier = ">=306" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6" },
     { name = "scipy", marker = "extra == 'audio'", specifier = ">=1.11" },
+    { name = "scipy", marker = "extra == 'dev'", specifier = ">=1.11" },
     { name = "sounddevice", marker = "extra == 'audio'", specifier = ">=0.4.6" },
+    { name = "sounddevice", marker = "extra == 'dev'", specifier = ">=0.4.6" },
 ]
 provides-extras = ["audio", "hotkey", "tray", "secrets", "macos", "windows", "wayland", "dev"]
 

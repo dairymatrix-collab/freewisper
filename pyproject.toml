@@ -26,6 +26,9 @@ classifiers = [
 dependencies = [
     "pydantic>=2.6",
     "platformdirs>=4.0",
+    # numpy is base: the ring buffer, the VAD and the level meter are pure
+    # array maths and must be importable without any audio hardware.
+    "numpy>=1.24",
 ]
 
 [project.optional-dependencies]
@@ -43,7 +46,8 @@ windows = ["pywin32>=306; sys_platform == 'win32'"]
 # Linux user. 1.x is pure-Python (ctypes) and installs anywhere.
 wayland = ["evdev>=1.6.0,<2.0; sys_platform == 'linux'"]
 dev = [
-    "numpy>=1.24",
+    "scipy>=1.11",
+    "sounddevice>=0.4.6",
     "pytest>=8.0",
     "pytest-cov>=5.0",
     "ruff>=0.6",
@@ -115,7 +119,7 @@ files = ["src/freewisper"]
 exclude = ["^src/freewisper/resources/"]
 
 [[tool.mypy.overrides]]
-module = ["sounddevice.*", "pynput.*", "pystray.*", "keyring.*", "evdev.*"]
+module = ["sounddevice.*", "pynput.*", "pystray.*", "keyring.*", "evdev.*", "scipy.*"]
 ignore_missing_imports = true
 
 # --------------------------------------------------------------------------

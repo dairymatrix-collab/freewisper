@@ -22,6 +22,19 @@ transcription engine (faster-whisper, MLX, or whisper.cpp). **It is never
 written to disk.** The recorder holds a bounded in-memory ring buffer for
 the pre-roll window and nothing else.
 
+Concretely, the audio engine:
+
+- keeps a **fixed-size** ring buffer in memory — the allocation is decided
+  from the configuration and never grows;
+- **discards** the ring content continuously when no key is held;
+- writes **no** temporary file, cache file or debug dump — a one-second
+  capture creates zero files on disk;
+- holds the audio only until the transcription stage has consumed it.
+
+The Phase-3 acceptance script verifies the last point empirically: it
+records a second of audio and then asserts that the filesystem is still
+empty.
+
 A cloud STT provider exists but is **off by default** and must be selected
 explicitly.
 
