@@ -5,7 +5,7 @@ description = "Freewisper — cross-platform push-to-talk voice dictation with l
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Freewisper contributors" }]
+authors = [{ name = "dairymatrix-collab" }]
 keywords = ["dictation", "speech-to-text", "whisper", "hotkey", "accessibility", "push-to-talk"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -57,13 +57,13 @@ dev = [
 [project.scripts]
 freewisper = "freewisper.cli:main"
 
-# NOTE: replace YOUR-USERNAME with your GitHub handle before publishing.
+# NOTE: replace dairymatrix-collab with your GitHub handle before publishing.
 [project.urls]
-Homepage = "https://github.com/YOUR-USERNAME/freewisper"
-Repository = "https://github.com/YOUR-USERNAME/freewisper"
-Issues = "https://github.com/YOUR-USERNAME/freewisper/issues"
-Changelog = "https://github.com/YOUR-USERNAME/freewisper/blob/main/CHANGELOG.md"
-"Issue tracker" = "https://github.com/YOUR-USERNAME/freewisper/issues"
+Homepage = "https://github.com/dairymatrix-collab/freewisper"
+Repository = "https://github.com/dairymatrix-collab/freewisper"
+Issues = "https://github.com/dairymatrix-collab/freewisper/issues"
+Changelog = "https://github.com/dairymatrix-collab/freewisper/blob/main/CHANGELOG.md"
+"Issue tracker" = "https://github.com/dairymatrix-collab/freewisper/issues"
 
 # NOTE: the plugin entry-point groups ("freewisper.stt", "freewisper.llm")
 # are deliberately NOT declared yet. The provider modules they would point at

@@ -1,6 +1,6 @@
 # Freewisper
 
-[![CI](https://github.com/YOUR-USERNAME/freewisper/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR-USERNAME/freewisper/actions/workflows/ci.yml)
+[![CI](https://github.com/dairymatrix-collab/freewisper/actions/workflows/ci.yml/badge.svg)](https://github.com/dairymatrix-collab/freewisper/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Code of Conduct](https://img.shields.io/badge/CoC-enforced-blue.svg)](CODE_OF_CONDUCT.md)
@@ -146,7 +146,7 @@ These are enforced, not aspirational:
 
 Three things to change before the first push:
 
-1. **Replace `YOUR-USERNAME`** in `pyproject.toml` (`[project.urls]`) and in
+1. **Replace `dairymatrix-collab`** in `pyproject.toml` (`[project.urls]`) and in
    `CHANGELOG.md` with your GitHub handle.
 2. **Set the copyright holder** in `LICENSE`.
 3. **Check the repository name and description** on GitHub — the default
@@ -157,7 +157,7 @@ Then:
 ```bash
 git add -A
 git commit -m "feat: initial release — config, core, CLI"
-git remote add origin https://github.com/YOUR-USERNAME/freewisper.git
+git remote add origin https://github.com/dairymatrix-collab/freewisper.git
 git push -u origin main
 ```
 

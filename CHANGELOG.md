@@ -90,5 +90,5 @@ up yet, so the app cannot yet dictate anything.
 - Test fixtures assemble credential-shaped strings at runtime, so no literal
   secret pattern is committed.
 
-[Unreleased]: https://github.com/YOUR-USERNAME/freewisper/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/YOUR-USERNAME/freewisper/releases/tag/v0.1.0
+[Unreleased]: https://github.com/dairymatrix-collab/freewisper/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/dairymatrix-collab/freewisper/releases/tag/v0.1.0

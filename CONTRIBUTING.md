@@ -22,7 +22,7 @@ rules the project claims must stay true.**
 ## Getting set up
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/freewisper.git
+git clone https://github.com/dairymatrix-collab/freewisper.git
 cd freewisper
 uv sync --all-extras
 uv run pytest
